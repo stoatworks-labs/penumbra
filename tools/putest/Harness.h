@@ -108,11 +108,15 @@ double ulpAt( double x )
 }
 
 /// The sRGB pair's budget, absolute, on values in 0..1 -- a bound, derived in
-/// AGENTS.md from GLSL 4.10 4.5.1: pow is exp2( y log2 x ), exp2 good to
-/// ( 3 + 2|x| ) ULP and log2 to 3 ULP (absolute 2^-21 in [0.5, 2]). decode's
-/// relative error is at most 3.6e-6 and encode's 2.1e-6; through encode's
-/// slope ( x encode'(x) <= 0.44 ) the pair is good to 4e-6 absolute. The
-/// tolerance is three times it.
+/// AGENTS.md ("Tolerances") from GLSL 4.10 4.5.1: pow is exp2( y log2 x ),
+/// exp2 good to ( 3 + 2|x| ) ULP and log2 to 3 ULP (absolute 2^-21 in
+/// [0.5, 2]), + - * correctly rounded, / 2.5 ULP. decode's relative error is
+/// at most 5.1e-6 (at its knee, where exp2's argument is largest) and
+/// encode's absolute error at most 6.8e-7; encode scales a relative error in
+/// its input by y encode'(y) = 0.44 y^(1/2.4), which is 0.04 at the knee, so
+/// encode( decode( rgb / a ) L ) a is good to 1.9e-6 absolute over the whole
+/// range (summed worst cases, evaluated on a grid on 2026-11-16). 4e-6 is
+/// used; the tolerance is three times it.
 constexpr double kPowBound = 4e-6;
 constexpr double kPowTol   = 3.0 * kPowBound;
 
