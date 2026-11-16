@@ -1224,6 +1224,11 @@ int runMutation()
 //---------------------------------------------------------------------------
 // --bench
 //---------------------------------------------------------------------------
+//Enough frames for the GPU to leave its idle clock. With 5, on 2026-11-16,
+//the first measurement (720p, defaults) read slower than 720p's biggest
+//boxes, and in one run slower than 1080p.
+constexpr int kBenchWarmUp = 60;
+
 double benchAt( int width, int height, int frames, const std::vector< std::string >& extra )
 {
 	MixRig rig;
@@ -1236,7 +1241,7 @@ double benchAt( int width, int height, int frames, const std::vector< std::strin
 		const size_t eq = s.find( '=' );
 		rig.Set( s.substr( 0, eq ), std::strtof( s.substr( eq + 1 ).c_str(), nullptr ) );
 	}
-	for( int frame = 0; frame < 5; ++frame )
+	for( int frame = 0; frame < kBenchWarmUp; ++frame )
 		rig.Render();
 	glFinish();
 	const auto start = std::chrono::steady_clock::now();
@@ -1255,7 +1260,7 @@ int runBench( int frames )
 		int width, height;
 	};
 	const Size sizes[] = { { "1280x720 ", 1280, 720 }, { "1920x1080", 1920, 1080 }, { "3840x2160", 3840, 2160 } };
-	std::printf( "%d frames each after a 5-frame warm-up, glFinish both sides; Dest and Src at the output size, the figure as the occluder.\n", frames );
+	std::printf( "%d frames each after a %d-frame warm-up, glFinish both sides; Dest and Src at the output size, the figure as the occluder.\n", frames, kBenchWarmUp );
 	std::printf( "defaults (Distance 0.35, lamps 0.05), then Distance 0.9 with lamps 0.5 (the biggest boxes the controls allow).\n\n" );
 	std::printf( "resolution     defaults ms/frame   %% of 60fps   | biggest boxes ms/frame   %% of 60fps\n" );
 	const std::vector< std::string > biggest = { "Distance=1", "Lamp 1 Size=1", "Lamp 2 Size=1", "Lamp 3 Size=1" };
