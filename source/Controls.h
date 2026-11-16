@@ -36,8 +36,14 @@ inline constexpr double kRoomMax = 1.0;
 /// edges go as g = k / ( 1 - k ), 0 at the screen, 0.25 at 0.2, 9 at 0.9.
 /// 0.9 is a person at a tenth of the way from the lamps: past it g runs off
 /// to infinity, and every shadow is a smear the size of the frame.
+///
+/// The default, 0.35 (g 0.54), was chosen on Resolume's demo clips, paired
+/// through `putest --pipe` (AGENTS.md, "Defaults"): at 0.2 a half-frame
+/// occluder throws one black hole with thin coloured rims; at 0.35 all
+/// seven coloured combinations show and the black core shrinks; at 0.5 a
+/// thin outline (Trinity's rings) blurs out.
 inline constexpr double kDistanceMax     = 0.9;
-inline constexpr double kDistanceDefault = 0.2;
+inline constexpr double kDistanceDefault = 0.35;
 
 /// Lamp X and Y: a lamp's offset from the reference point in the lamps'
 /// plane, X -2 to 2 and Y -1 to 1 screen heights, linear.

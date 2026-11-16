@@ -693,11 +693,14 @@ void penumbraCheck( int W, int H, int fault, const char* fragment = nullptr )
 	}
 
 	//Everything at once, pixel by pixel against the ray cast: three lamps of
-	//three colours and sizes, three blocks at three alphas, Opacity 0.8,
-	//Room Light 0.2, Src at its own size.
+	//three colours and sizes, blocks at three alphas, three of them on the
+	//frame's edges and corners where boxes hang off it (cut on one side or
+	//on two), Opacity 0.8, Room Light 0.2, and
+	//Src at its own size AND its own aspect (3/4 of the width, 1/2 of the
+	//height), so a square lamp is a rectangle in occluder texels.
 	{
 		Room r;
-		r.W = W, r.H = H, r.mw = W * 3 / 4, r.mh = H * 3 / 4;
+		r.W = W, r.H = H, r.mw = W * 3 / 4, r.mh = H / 2;
 		r.k            = 0.35;
 		r.room         = 0.2;
 		r.opacity      = 0.8;
@@ -706,7 +709,10 @@ void penumbraCheck( int W, int H, int fault, const char* fragment = nullptr )
 		r.lamp[ 2 ]    = { { 0.3, 0.2, 1.0 }, 0.6, -0.1, 0.06 };
 		r.blocks       = { { r.mw / 5, r.mh / 4, r.mw / 2, r.mh * 3 / 4, 255 },
                      { r.mw / 2 + 6, r.mh / 3, r.mw * 3 / 4, r.mh / 2, 153 },
-                     { r.mw * 3 / 5, r.mh * 3 / 5, r.mw * 4 / 5, r.mh * 4 / 5, 51 } };
+                     { r.mw * 3 / 5, r.mh * 3 / 5, r.mw * 4 / 5, r.mh * 4 / 5, 51 },
+                     { 0, r.mh / 8, r.mw / 8, r.mh / 3, 255 },
+                     { 0, 0, r.mw / 10, r.mh / 10, 255 },
+                     { r.mw * 7 / 8, r.mh * 5 / 6, r.mw, r.mh, 255 } };
 		MixRig cast;
 		if( !cast.Init( W, H, InputSpec::Exact( W, H ), InputSpec::Exact( r.mw, r.mh ), true, fault, fragment ) )
 			return;
@@ -715,11 +721,18 @@ void penumbraCheck( int W, int H, int fault, const char* fragment = nullptr )
 		for( int i = 0; i < kLamps; ++i )
 			tol += 3.0 * r.levelBound( i );
 		double worst = 0.0;
+		int wx = 0, wy = 0, wc = 0;
 		for( int y = 0; y < H; ++y )
 			for( int x = 0; x < W; ++x )
 				for( int c = 0; c < 3; ++c )
-					worst = std::max( worst, std::fabs( channel( out, W, x, y, c ) - r.light( c, x + 0.5, y + 0.5 ) ) );
-		Check( worst <= tol, fmt( "every pixel and channel matches the 3D ray cast (D %.1f, k %.2f; worst %.2g, tolerance %.2g)", r.D, r.k, worst, tol ) );
+				{
+					const double e = std::fabs( channel( out, W, x, y, c ) - r.light( c, x + 0.5, y + 0.5 ) );
+					if( e > worst )
+						worst = e, wx = x, wy = y, wc = c;
+				}
+		Check( worst <= tol, fmt( "every pixel and channel matches the 3D ray cast (D %.1f, k %.2f; worst %.2g, tolerance %.2g)", r.D, r.k, worst, tol )
+		                         + fmt( ", at pixel %.0f, %.0f channel %.0f", wx, wy, wc )
+		                         + fmt( ": %.6f against %.6f", channel( out, W, wx, wy, wc ), r.light( wc, wx + 0.5, wy + 0.5 ) ) );
 	}
 }
 
@@ -880,7 +893,7 @@ void alphaCheck( int W, int H, int fault )
 			{
 				const double L    = r.light( c, x + 0.5, y + 0.5 );
 				const double want = L == 1.0 ? screenF[ at + static_cast< size_t >( c ) ]
-				                             : EncodeSrgb( DecodeSrgb( std::clamp( screenF[ at + static_cast< size_t >( c ) ] / a, 0.0, 1.0 ) ) * L ) * a;
+				                             : linearToSrgb( srgbToLinear( std::clamp( screenF[ at + static_cast< size_t >( c ) ] / a, 0.0, 1.0 ) ) * L ) * a;
 				worst = std::max( worst, std::fabs( opaque[ at + static_cast< size_t >( c ) ] - want ) );
 			}
 		}
@@ -989,7 +1002,7 @@ void linearCheck( int W, int H, int fault )
 					continue;
 				const double g    = ramp[ at4( W, x, y ) ];
 				const double L    = r.light( 0, x + 0.5, y + 0.5 );
-				const double want = r.linear ? EncodeSrgb( DecodeSrgb( g ) * L ) : g * L;
+				const double want = r.linear ? linearToSrgb( srgbToLinear( g ) * L ) : g * L;
 				worst             = std::max( worst, std::fabs( channel( out, W, x, y, 1 ) - want ) );
 				++checked;
 				belowKnee += g <= 0.04045;
@@ -1020,11 +1033,11 @@ void linearCheck( int W, int H, int fault )
 					continue;
 				++checked;
 				for( int c = 0; c < 3; ++c )
-					worst = std::max( worst, std::fabs( channel( out, W, x, y, c ) - EncodeSrgb( r.light( c, x + 0.5, y + 0.5 ) ) ) );
+					worst = std::max( worst, std::fabs( channel( out, W, x, y, c ) - linearToSrgb( r.light( c, x + 0.5, y + 0.5 ) ) ) );
 			}
 		Check( checked > W * H / 2 && worst <= kPowTol,
-		       fmt( "a lamp picked at (1, 0.5, 0) shares decode(0.5) = %.4f of green with a white lamp: light %.4f where it is blocked", DecodeSrgb( 0.5 ),
-		            1.0 / ( 1.0 + DecodeSrgb( 0.5 ) ) )
+		       fmt( "a lamp picked at (1, 0.5, 0) shares decode(0.5) = %.4f of green with a white lamp: light %.4f where it is blocked", srgbToLinear( 0.5 ),
+		            1.0 / ( 1.0 + srgbToLinear( 0.5 ) ) )
 		           + fmt( " (worst %.2g, tolerance %.2g)", worst, kPowTol ) );
 	}
 }
@@ -1089,7 +1102,7 @@ void opacityCheck( int W, int H, int fault )
 					++checked;
 					worstLinear     = std::max( worstLinear, std::fabs( ( 1.0 - channel( out, W, x, y, c ) ) - op * blockedFull ) );
 					const double L  = 1.0 - op * blockedFull;
-					worstPicture    = std::max( worstPicture, std::fabs( channel( picture, W, x, y, c ) - EncodeSrgb( DecodeSrgb( 0.5 ) * L ) ) );
+					worstPicture    = std::max( worstPicture, std::fabs( channel( picture, W, x, y, c ) - linearToSrgb( srgbToLinear( 0.5 ) * L ) ) );
 				}
 	}
 	Check( checked > 200 && worstLinear <= kColourTol,
@@ -1243,7 +1256,7 @@ int runBench( int frames )
 	};
 	const Size sizes[] = { { "1280x720 ", 1280, 720 }, { "1920x1080", 1920, 1080 }, { "3840x2160", 3840, 2160 } };
 	std::printf( "%d frames each after a 5-frame warm-up, glFinish both sides; Dest and Src at the output size, the figure as the occluder.\n", frames );
-	std::printf( "defaults (Distance 0.2, lamps 0.05), then Distance 0.9 with lamps 0.5 (the biggest boxes the controls allow).\n\n" );
+	std::printf( "defaults (Distance 0.35, lamps 0.05), then Distance 0.9 with lamps 0.5 (the biggest boxes the controls allow).\n\n" );
 	std::printf( "resolution     defaults ms/frame   %% of 60fps   | biggest boxes ms/frame   %% of 60fps\n" );
 	const std::vector< std::string > biggest = { "Distance=1", "Lamp 1 Size=1", "Lamp 2 Size=1", "Lamp 3 Size=1" };
 	for( const Size& size : sizes )

@@ -116,6 +116,23 @@ double ulpAt( double x )
 constexpr double kPowBound = 4e-6;
 constexpr double kPowTol   = 3.0 * kPowBound;
 
+/// The sRGB pair, IEC 61966-2-1:1999 (amended 2003): the harness's own copy.
+/// The plugin's (Controls.cpp) decodes the lamps' colours, so it must not
+/// also be the yardstick -- a mutant there would move both sides at once.
+double srgbToLinear( double v )
+{
+	if( v <= 0.04045 )
+		return v / 12.92;
+	return std::pow( ( v + 0.055 ) / 1.055, 2.4 );
+}
+
+double linearToSrgb( double v )
+{
+	if( v <= 0.0031308 )
+		return v * 12.92;
+	return 1.055 * std::pow( v, 1.0 / 2.4 ) - 0.055;
+}
+
 /// A light level from shares that are exactly 0 or 1 per region, or from
 /// shares rounded once to float: 1 - sum of three products, six roundings.
 constexpr double kColourBound = 6.0 * kFloatUlp;
@@ -848,7 +865,7 @@ struct Room
 	double linearOf( int i, int c ) const
 	{
 		const double picked = std::clamp( lamp[ i ].colour[ c ], 0.0, 1.0 );
-		return linear ? DecodeSrgb( picked ) : picked;
+		return linear ? srgbToLinear( picked ) : picked;
 	}
 
 	/// The light on the screen in channel c, as a fraction of the unblocked
