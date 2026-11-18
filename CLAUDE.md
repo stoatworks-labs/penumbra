@@ -5,7 +5,7 @@ lamps light a white screen with the clip printed on it, and someone stands betwe
 the screen. Each screen point shows the sum of the lamps it can see (Soler & Sillion 1998
 §3.1: for parallel planes, the visible part of a lamp is a convolution), evaluated exactly
 by an integer summed-area table. C++/GLSL, CMake MODULE → universal `.bundle` (macOS) +
-Windows `.dll` (never built). MIT.
+Windows `.dll`. MIT.
 
 | id | display name | bundle | type | inputs |
 | --- | --- | --- | --- | --- |
@@ -22,8 +22,10 @@ departs from it.
 - Configure: `cmake -B build -DCMAKE_BUILD_TYPE=Release`
 - Fast dev build: add `-DCMAKE_OSX_ARCHITECTURES=arm64` (iteration builds here are arm64)
 - Build: `cmake --build build -j8`
-- Install to Resolume: `cmake --install build` (into Arena's Extra Effects). Not run on
-  this machine: the plugin has never been loaded into Resolume.
+- Install to Resolume: `cmake --install build` (into Arena's Extra Effects). Arena on this
+  Mac opens Allan's current show composition and may be in use: only when it is not
+  running, add two layers for the test, delete them, and quit without saving (the .avc's
+  mtime is the check). README Status has what Arena showed.
 - Render offline: `./build/putest --out /tmp/penumbra.png` (the `screen` card as Dest, the
   `figure` card's alpha as the occluder, on the defaults); `--input-a white` for the
   classic exhibit look
@@ -125,9 +127,10 @@ departs from it.
   `build-verify/putest`, Chrome and a GPU). AGENTS.md has the gaps and the last figures.
 
 ## Not done yet
-- Never loaded in Resolume (either platform); never built on Windows; the hub's mask has
+- Loaded in Resolume Arena on both platforms on test pictures only (README Status): never
+  with a keyed performer or a camera mask, never timed inside Resolume; the hub's mask has
   never been fed to it.
-- No user guide, no OpenFX port, no presets.
+- No OpenFX port, no presets.
 
 ## Diagnostics
 

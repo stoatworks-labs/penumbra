@@ -1,8 +1,9 @@
 # penumbra
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. It has **never been loaded into
-> Resolume**, on macOS or Windows, and has never been built on Windows. Everything below is
+> (Anthropic), directed and reviewed by a human author. It has been loaded into Resolume
+> Arena on macOS and on Windows and drew its shadows in both, on test clips and a stick
+> figure (see [Status](#status)). Everything else below is
 > measured by an offline harness, `putest`, that drives the real plugin class in a headless
 > GL context with two inputs, at two rasters, on this Mac's GPU and again on Apple's software
 > renderer, and reads the light straight off the plugin's float output. The shadows are
@@ -122,12 +123,54 @@ drawn: in a room the audience sees the person, not their shadow's mask.
 
 ## Status
 
-**v0.1.0, 16 November 2026, unreleased, and early days.** It has **never been loaded into
-Resolume** on either platform and never been built on Windows. `oxbow probe` reads the
-bundle as a host does (`SW Penumbra` / `PU01` / **mixer**, two inputs, parameter 0 Linear
-Light, a standard parameter named Opacity), and `oxbow selftest`, an effect host that hands
-the plugin one input, is refused on its first frame, as a mixer must refuse it. There's no
-user guide yet, no OpenFX port and no browser demo.
+**v0.1.0, 18 November 2026, and early days.** It has been loaded into Resolume Arena on
+Windows and on macOS, and drew its shadows in both (below), but only over a white clip with
+a stick figure in front: never with a keyed performer or a camera mask, never through a
+show. The macOS build is Developer ID-signed and notarised. `oxbow probe` reads the bundle
+as a host does (`SW Penumbra` / `PU01` / **mixer**, two inputs, parameter 0 Linear Light, a
+standard parameter named Opacity), and `oxbow selftest`, an effect host that hands the
+plugin one input, is refused on its first frame, as a mixer must refuse it. There's a
+[user guide](docs/USER-GUIDE.md) and a [browser demo](#browser-demo), but no OpenFX port and
+no presets.
+
+### In Resolume
+
+The fleet's Arena gate cannot gate a mixer, so SW Penumbra was mounted by hand over Arena's
+REST API and read through its own log, on 18 November 2026.
+
+![Three soft-edged shadows of a red stick figure on white, yellow on the left, cyan on the
+right and magenta below, overlapping in green, red and blue, as Resolume Arena's own
+composition snapshot shows them](docs/arena.jpg)
+
+<sub>SW Penumbra on its defaults inside Resolume Arena 7.27.1 on Windows, software
+rendering, from Arena's composition snapshot over REST: a white still on layer 2, and a
+red stick figure with alpha on layer 3, whose Blend Mode is SW Penumbra. The figure's own
+colour is never drawn.</sub>
+
+- **Windows: Arena 7.27.1 on win-lab, software rendering (llvmpipe, no GPU)**, the DLL
+  from a `release.yml` run of this source, which `tools/wincheck.ps1` had loaded as a host
+  does (PU01, mixer, 30 parameters). Arena's log registers `'SW Penumbra' uid: PU01
+  category: 2`, and it is offered in a layer's Blend Mode list (and in its transition
+  list). Mounted as layer 3's Blend Mode, **29 of the 30 parameters are shown, and the
+  missing one is Linear Light**, index 0, parked there for that reason. Setting the layer's
+  opacity to 0.2, 0.85, 0.5 and 1.0 reached the plugin as **Opacity** at exactly those
+  values (its log, frames 19, 28, 37 and 46), and a REST write of 0.15 to the mixer's own
+  Opacity read back 1.0 and never reached it: **Opacity is the layer's fader.** Both inputs
+  arrived padded, 1280×720 in 1280×768 textures, the case `--mixer` tests. Arena's
+  composition snapshot showed the shadows: the three coloured figures on the defaults, one
+  hard black silhouette at Distance 0, the shadows parted at 0.6.
+- **As a layer transition** (4 s, Arena 7.27.1) it ran its own instance; its Opacity ramped
+  from 0.001 to 0.987 in 17 frames and never reached 1, and then the layer showed the new
+  clip on its own. So as a transition SW Penumbra ends with a jump, from the old clip with
+  the new one's shadows on it to the new clip. It is meant as a blend mode.
+- **macOS: Arena 7.29.0 on an Apple M4 Max**, a local universal build of the same source
+  (ad-hoc signed, not the notarised download): registered `PU01` category 2, 29 of 30
+  parameters shown with Linear Light the one hidden, the fader reaching Opacity at 0.2,
+  0.85, 0.5 and 1.0, the REST write overridden, inputs padded 1920×1080 in 1920×1088, and
+  the composition snapshot showing the shadows.
+
+Not measured in Resolume: its cost (on llvmpipe Arena ran at about 5 fps, which says
+nothing about the plugin), a real performer, and any GPU but the M4 Max.
 
 ### Measured offline, on macOS
 
@@ -181,10 +224,11 @@ the red lamp's shadow is visible.
 
 ### Not established
 
-- **Resolume.** Never loaded, on either platform. That Arena hides a mixer's first parameter
-  and binds `Opacity` to the layer fader was measured on five other mixers (genlock, wipe,
-  relay, lenticular, pepper), not on this one.
-- **Windows.** Never built. The CI workflow in `.github/` was written and has never run.
+- **Resolume in a show.** Mounted on test pictures only (above): never a keyed performer
+  or a camera mask, never a whole show, never timed inside Resolume.
+- **Brightening.** There is none. The lamps light the clip, so a shadow on a dark clip is
+  faint and most of Resolume's demo clips are dark. A gain would not be light; whether the
+  plugin should offer one anyway is open.
 - **The hub.** Its person mask has never been fed in. Whether it arrives with alpha or as
   white on black is the hub's to decide; the default reads alpha.
 - **Each lamp is assumed to light the screen evenly**: no inverse square, no cosine, no
@@ -233,11 +277,11 @@ cmake --install build
 ```
 
 The last one copies `Penumbra.bundle` into `~/Documents/Resolume Arena/Extra Effects`.
-Restart Arena and it should be in a layer's Blend Mode list as **SW Penumbra**, where the
-fleet's other mixers are (this one has never been loaded).
+Restart Arena and it is in a layer's Blend Mode list as **SW Penumbra**.
 
-Windows needs Visual Studio 2022 and vcpkg (for GLEW); see `.github/workflows/ci.yml`. It
-has never been built there.
+Windows needs Visual Studio 2022 and vcpkg (for GLEW); see `.github/workflows/ci.yml`,
+which builds it on every push with no warnings, and `release.yml`, whose
+`tools/wincheck.ps1` loads the DLL as a host does.
 
 ## Building and testing
 

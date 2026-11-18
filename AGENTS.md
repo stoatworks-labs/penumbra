@@ -335,8 +335,8 @@ know:
   cannot be the visitor's picture, and its colours are never drawn. MaxUV is always 1:
   every input is the output's size, so the plugin's padded-texture path is never taken.
 - **Opacity and Linear Light are on the panel.** The disclosure says Arena binds a mixer's
-  Opacity to the layer fader and hides parameter 0, measured on genlock, wipe, relay,
-  lenticular and pepper, never on penumbra, which has never been loaded into Resolume.
+  Opacity to the layer fader and hides parameter 0: measured on penumbra itself on
+  2026-11-18 (below), after the demo first landed saying it was not yet.
 - **The page's own `differences` list says all of this on the page.** Keep it true. The line
   under the picture (the table, Q, the passes, g, where each shadow lands and its edge, the
   pose) is the port's arithmetic, not the plugin's, and says so.
@@ -372,6 +372,51 @@ not run it):
   `project-page` (`https://stoatworks-labs.com/software/penumbra/`) returned 404 on
   2026-11-18: the website does not have penumbra yet. Both resolve once it does.
 
+## What penumbra showed in Arena (2026-11-18)
+
+The fleet's gate cannot gate a mixer, so it was mounted by hand over Arena's REST API and read
+through the plugin's own log, as genlock, wipe, relay, lenticular and pepper were. Answers to
+the open question the build left (index 0 hidden, Opacity on the fader): **yes, and yes**.
+
+**Windows: Arena 7.27.1 15990, win-lab, llvmpipe (Mesa 26.2.0, GL 4.5 core).** The DLL from
+the `release.yml` dispatch run 44226014519 on 5e6031d (wincheck: PU01, mixer, 30 parameters,
+Linear Light first). Arena's log: `RenderPassManager: registered extension: 'SW Penumbra'
+uid: PU01 category: 2`, then `FFGL: Created Penumbra mixer` when mounted. Mount: a 1280x720
+white PNG on layer 2 and a red stick figure with alpha on layer 3, both opened and
+connected, layer 1's opacity at 0, then layer 3's `video.mixer["Blend Mode"]` = `SW Penumbra`.
+- 29 of 30 parameters in `video.mixer` (besides Blend Mode); the missing one is Linear Light.
+  Six for six mixers now.
+- Layer opacity 0.2, 0.85, 0.5, 1.0 → the plugin's log: `Opacity 0.200000 at frame 19`,
+  `0.850000 at frame 28`, `0.500000 at frame 37`, `1.000000 at frame 46`; the layer's
+  fader had been left at 0.5 by an earlier session (`Opacity 0.500000 at frame 1`). A REST
+  write of 0.15 to the mixer's own Opacity read back 1.0 and logged nothing.
+- `first frame: Dest 1280x720 of 1280x768, Src 1280x720 of 1280x768, out 1280x720`;
+  `table 1281x721, Q 255`. Arena pads to a multiple of 64 rows: the MaxUV path `--mixer`
+  tests is the one Arena takes.
+- **Arena's composition snapshot shows a mixer's output.** `GET
+  /composition/monitors/1/snapshot.jpg` served the coloured shadows on the defaults, one hard
+  black silhouette at Distance 0 and the shadows parted at Distance 0.6 (param 0.6, k 0.54).
+  The fleet's note that "no frame of a mixer's output can be grabbed over REST" was about
+  the clip thumbnail; the composition monitor has it. `docs/arena.jpg` is the defaults.
+- About 5 fps on llvmpipe (111 frames in 22 s): Arena's software-rendered rate, not a cost.
+- **As a transition** (layer 3's `transition.blend_mode` = SW Penumbra, duration 4 s, the
+  carrier on clip 1 and the figure on clip 2, clip 2 connected): a fresh instance, Opacity
+  0.001285 at frame 1 rising by about 0.055 a frame to 0.987120 at frame 17, then DeInitGL;
+  never 1.0. The snapshots: the carrier with the figure's shadows coming in, then the figure
+  clip alone. So a transition ends with a jump (lenticular's finding: any mixer whose
+  Opacity 1 is not the plain B pops). The guide says it's meant as a blend mode.
+- Restored: Blend Mode Add, transition Alpha / 0 s, layer opacities as found, clips cleared.
+
+**macOS: Arena 7.29.0 33052, Apple M4 Max (GL 4.1 Metal - 90.5).** A local universal build
+of the same source (`build-verify/Penumbra.bundle`, ad-hoc signed), installed for the probe
+and taken out after. Arena opened Allan's show composition, so the probe added two layers on
+top (8: white, 9: the figure), used only those, deleted them (7 layers before and after) and
+quit with Quit, not Save & Quit; the .avc's mtime was unchanged. Registered `PU01` category 2;
+29 of 30 shown, Linear Light hidden; fader → `Opacity 0.200000 at frame 336`, `0.850000 at
+448`, `0.500000 at 563`, `1.000000 at 678`; REST 0.15 read back 1.0; `Dest 1920x1080 of
+1920x1088`, `table 1921x1081, Q 255`; the composition snapshot showed the shadows on the
+1280x720 still, centred in the 1920x1080 composition.
+
 ## Open questions
 
 - **Depth, in v0.2**: `Distance From: Control / Occluder Red`, opt-in, once the hub defines
@@ -381,13 +426,12 @@ not run it):
 - **Dark clips.** Most demo clips are dark and shadows on them are faint. On White helps
   only where the clip is transparent; a gain or a "screen brightness" control would be a new
   idea, not physics.
-- **Arena must confirm** it hides parameter 0 on this mixer too, and that `Opacity` lands on
-  the layer fader.
 - **Falloff and the form factor** (even wash assumed): a 1/cos³-style term per lamp would be
   cheap but breaks the "exactly 1 where unblocked" pass-through unless it is normalised.
 - **Round lamps**: the same width, a different profile; a stepped disc costs k times the
   fetches.
-- **Never in Resolume, never on Windows.**
+- **In Resolume on test pictures only**: no keyed performer, no camera mask, no show, no
+  timing inside Resolume.
 
 ## Generated copies
 
