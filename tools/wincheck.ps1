@@ -2,7 +2,7 @@
     What a host sees of a built Windows DLL, with no GL and no Resolume.
 
         tools/wincheck.ps1 -Dll build/Release/Penumbra.dll -Name "SW Penumbra" `
-                           -Id PU01 -Kind mixer -Params 29 -First "Linear Light"
+                           -Id PU01 -Kind mixer -Params 30 -First "Linear Light"
 
     It LOADS the DLL (so a missing runtime or dependency fails here, where
     dumpbin cannot see it), finds plugMain, and asks it what Resolume asks

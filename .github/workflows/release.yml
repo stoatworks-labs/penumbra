@@ -73,7 +73,7 @@ jobs:
       - name: Check the DLL (Windows)
         if: runner.os == 'Windows'
         run: |
-          ./tools/wincheck.ps1 -Dll "build/Release/Penumbra.dll" -Name "SW Penumbra" -Id PU01 -Kind mixer -Params 29 -First "Linear Light"
+          ./tools/wincheck.ps1 -Dll "build/Release/Penumbra.dll" -Name "SW Penumbra" -Id PU01 -Kind mixer -Params 30 -First "Linear Light"
           if( $LASTEXITCODE ) { exit $LASTEXITCODE }
 
       - name: Derive version

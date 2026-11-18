@@ -149,7 +149,7 @@ establishes:
 | `--opacity` | 1 − light is Opacity times the blocking at 0.25 and 0.5 to 3e-8, in linear light, not a gamma-space crossfade; at 0, the screen byte for byte |
 | `--mixer` | null, zero and one input, null or zero-sized inputs and a zero viewport each return FF_FAIL and leave the plugin working; Dest 200×120 of 256×256 and Src 96×70 of 128×128 into 320×180 and 640×360, both padded in opaque magenta: **0** padding pixels reach the picture or cast a shadow; at Distance 0 a block's hard shadow is black on exactly the 25,600 output pixels that map into it, every other pixel the screen to the byte; after a frame the host's textures, program, framebuffer, viewport, blend and clear colour are back |
 | `--resize` | Src and output sizes changed mid-run: the next frame is a fresh instance's, **0** bytes different, four sizes |
-| `--names` | 29 parameters, within FFGL's 16 bytes, unique, the About block last; index 0 is Linear Light, on; Opacity is a standard parameter |
+| `--names` | 30 parameters, within FFGL's 16 bytes, unique, the About block last; index 0 is Linear Light, on; Opacity is a standard parameter |
 | `--pipe` | a clear Src gives Dest back byte for byte; 3 Dest frames over 2 Src frames give 2 out, 2.5 frames give 2; cues ramp Opacity and step View; a bad cue or `--set` exits 2; a closed stdout (`\| head -c 1`) exits 1, not 141 |
 | negative controls | **37** deliberately wrong versions built into the real plugin (the shadows multiplied instead of summed, thrown towards their lamps, blurred by the lamp scaled to the occluder's plane, read at the pixel's corner, the padding occluding, alpha from the occluder, and so on), **37** caught |
 | mutation | **29** one-character mutants of the shipped GLSL and C++, **29** caught |

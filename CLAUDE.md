@@ -99,9 +99,9 @@ departs from it.
   its object looks up to date. mutate.sh deletes the touched objects and the binary before
   every build; never hand-mutate a source file in a shared build directory.
 - `putest`'s `fmt()` takes doubles only: never pass it a `%s` or `%d` format.
-- **Provisional hand copies:** `source/StoatworksAbout*.h` (guide = "", no user guide yet)
-  and `ATTRIBUTIONS.md`. Once the project is registered in stoatworks-backend,
-  `sync-about.py` and `sync-attributions.py` generate them; edit them there then.
+- **Generated, never edit here:** `source/StoatworksAbout.h`, `ATTRIBUTIONS.md` (and the
+  README's attributions block), the issue forms and `.github/FUNDING.yml` come from
+  stoatworks-backend's sync scripts (registered 2026-11-18). Edit them there and re-sync.
 - **The workflows.** The repo is public (`stoatworks-labs/penumbra`, since 2026-11-18),
   which is what allows Actions. `ci.yml` builds on macOS and Windows on every push and pull
   request; `release.yml` (xenon's shape, with pepper's `tools/wincheck.ps1`) builds the
