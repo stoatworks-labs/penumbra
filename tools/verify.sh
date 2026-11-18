@@ -11,6 +11,10 @@
 #                 prefix and the screen passes) compile through a real GLSL
 #                 compiler (tools/glslc.sh), before a host has to find out.
 #                 glslc is REQUIRED here: a skipped compile is not a pass.
+#   browser demo  is demo/shaders.js still source/Shaders.cpp to the
+#                 character, and are the C++ lines the page's pass
+#                 orchestration was ported from unchanged
+#                 (demo/tools/check_shaders.py)
 #   build         a fresh universal Release build, which is what would ship;
 #                 no warning in this repo's own code
 #   checks        the plugin's claims, measured at TWO rasters (640x360 and
@@ -93,8 +97,7 @@ else
 	fail "a GLSL reserved word is declared as an identifier, or M_PI is used"
 fi
 # Built-ins that arrived in GLSL 4.00 / ES 3.10: they compile everywhere here
-# but not in WebGL2, where the fleet's browser demos run the shaders unedited.
-# Penumbra has no demo; the rule is kept so one can be made.
+# but not in WebGL2, where the browser demo (demo/) runs the shaders unedited.
 if grep -nE '(^|[^A-Za-z_])(findMSB|findLSB|bitCount|bitfieldExtract|bitfieldInsert|bitfieldReverse|uaddCarry|usubBorrow|umulExtended|imulExtended|frexp|ldexp|fma|textureGather|textureQueryLevels|packUnorm4x8|unpackUnorm4x8)[[:space:]]*\(' source/Shaders.cpp | grep -vE '^[0-9]+:[[:space:]]*//' >"$LOGS/webgl.txt"; then
 	sed 's/^/   /' "$LOGS/webgl.txt"
 	fail "a built-in GLSL ES 3.00 lacks is in the GLSL"
@@ -115,6 +118,24 @@ if GLSLC_REQUIRED=1 tools/glslc.sh; then
 	pass "every shader compiles through glslc"
 else
 	fail "a shader does not compile, or glslc is missing (brew install shaderc)"
+fi
+
+#---------------------------------------------------------------------------
+# The page runs the plugin's shaders: a shader edited here and not spliced
+# across would leave it drawing something else and saying it is the plugin.
+# The check also holds the page's assembly of them, and the C++ lines its
+# pass orchestration (the R32UI tables, the radix-16 prefix passes) was
+# ported from, to the text they had when it was ported. The CPU half in
+# demo/plugin.js is a hand port: demo/tools/crosscheck/ compares the page's
+# pictures with putest's, and needs Chrome and a GPU, so it is run by hand
+# (AGENTS.md).
+#---------------------------------------------------------------------------
+step "browser demo"
+if python3 demo/tools/check_shaders.py >"$LOGS/demo.log" 2>&1; then
+	pass "demo/shaders.js is source/Shaders.cpp, and the orchestration's C++ is the text it was ported from"
+else
+	sed 's/^/   /' "$LOGS/demo.log"
+	fail "the demo's shaders, or the C++ its orchestration was ported from, have drifted"
 fi
 
 #---------------------------------------------------------------------------

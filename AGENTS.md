@@ -296,6 +296,82 @@ other builds:
 3841×2161 R32UI, 33 MB, written seven times a frame), not measured. Earlier runs the same day
 with a 5-frame warm-up and a load average near 11 gave 0.54/0.61/2.45 ms.
 
+## The browser demo (2026-11-18)
+
+`demo/` is <https://penumbra-demo.stoatworks-labs.com>, built to the fleet's `resolume-demo`
+kit rules (`~/Projects/resolume/specs/DEMO-BRIEF.md`), from pepper's. What a reader of it must
+know:
+
+- **The shaders are the plugin's**: kVersion, kVertex, kCommon, kConvertFragment,
+  kPrefixFragment and kScreenFragment, spliced by `demo/tools/check_shaders.py --write` into
+  `demo/shaders.js` and compared character for character, with the assembly on both sides
+  (AssembleVertex, AssembleFragment, the compile lines in Penumbra.cpp, plugin.js's copy),
+  and every uniform any piece declares named in plugin.js. The integer uniforms go through
+  `setInt` (Luma, Levels, Taps, ScreenExact, Linear, OnWhite, ShowLight, Fault) or
+  `gl.uniform2i` (the ivec2s Step, OutSize, TableSize): the kit's `Program.set` uploads a
+  float, which GL refuses for an int, so a `.set()` on one fails the check. Nothing is respelled. `tools/verify.sh` runs the check.
+- **The pass orchestration is a port**, and the check holds it to its source: the C++ lines
+  it was translated from (kRadix; tableW/tableH; the two `Ensure( tableW + 1, tableH + 1 )`;
+  the Convert draw into table 0; the axis, `n` and stride loops; the taps; the ping-pong
+  draw; the bind of `table[ from ]` on unit 1; TableBuffer's `GL_R32UI` and `GL_NEAREST`)
+  must still read as they did, or verify fails. In `demo/plugin.js` between the FRAME
+  markers: two R32UI tables one texel bigger than the person each way, NEAREST, read with
+  `texelFetch` through a highp `usampler2D`; Convert into the first; radix-16 Prefix passes
+  along x then y (strides 1, 16, 256 at 961 × 541, each with the C++'s own tap count),
+  ping-ponging; then Screen, with every uniform ProcessOpenGL sets. The tests read a table
+  back with `RGBA_INTEGER`/`UNSIGNED_INT` (`penumbraDemo.readTable()`), the only readback
+  WebGL2 allows for an R32UI attachment.
+- **The CPU half is a port**, in double: Controls.cpp's conversions (OptionIndex with
+  `lround`, the Room, Distance, Lamp X/Y and Lamp Size FromParam/ParamFor, DecodeSrgb) and
+  Model.cpp's LevelsFor and Plan, between the PORT markers. Not ported: the Fault branches
+  (`SetFaultForTest`; the Fault uniform is 0, as shipped), the log, the About block. Change
+  Controls, Model or ProcessOpenGL and change the port too.
+- **Two inputs from a kit made for one.** The kit's Clip picker is the Screen (Dest),
+  renamed, with a White screen the page adds first and picks by default (README's reference
+  image is on white, and most clips are dark); "Use my own…" makes the visitor's picture the
+  screen. The person (Src) is the kit's variant dropdown, a GLSL port of putest's figure and
+  mask cards (figureCover/figureCard): Swaying (the default: a lean of up to 3.4° every 14 s
+  and an arm lifting every 9 s), Still, Mask and Nobody; `?person=` picks it. The person
+  cannot be the visitor's picture, and its colours are never drawn. MaxUV is always 1:
+  every input is the output's size, so the plugin's padded-texture path is never taken.
+- **Opacity and Linear Light are on the panel.** The disclosure says Arena binds a mixer's
+  Opacity to the layer fader and hides parameter 0, measured on genlock, wipe, relay,
+  lenticular and pepper, never on penumbra, which has never been loaded into Resolume.
+- **The page's own `differences` list says all of this on the page.** Keep it true. The line
+  under the picture (the table, Q, the passes, g, where each shadow lands and its edge, the
+  pose) is the port's arithmetic, not the plugin's, and says so.
+
+How it was verified, and how to again (it needs this Mac's GPU and Chrome, so verify.sh does
+not run it):
+
+- `demo/tools/crosscheck/crosscheck.py [--size 1280x720] [--putest build/putest]`. The
+  harness's own cards as Dest and Src (`putest --out` with a card as Dest over a clear Src
+  returns the card bit for bit), the same settings to `putest --out` and to the page through
+  `window.penumbraDemo.renderCase` (a fresh instance) in headless Chrome. First the table of
+  controls against `putest --list`. 17 cases: the defaults on white and on the screen card,
+  As Is and On White over a screen with alpha, View Light, Linear Light off, Distance 0 and
+  1, point lamps and big lamps, the lamps moved, amber/teal/violet with Room Light 0.3 and
+  Opacity 0.6, two whites and a black lamp, the mask on Luma, the mask on Alpha (a wall),
+  nobody, and a half-size Src. Then the page's own person (Still, Mask, Nobody) against the
+  figure, mask and clear cards. A case passes when no pixel is more than one level of 255
+  apart and 99% are identical. 18 November 2026, M4 Max, Chrome 157 through ANGLE on Metal,
+  against putest on GL 4.1: all 25 controls agree, every uniform set, no GL error, no frame
+  refused; **every case 100% identical, max 0**, at 640 × 360 and at 1280 × 720 (passes x 1,
+  16, 256 and y 1, 16, 256 at both). The person is 100% identical at 640 × 360; at
+  1280 × 720 the figure and the mask round to 100.000% with one pixel's worth at one level.
+  Negative controls, each caught: Distance one slider step (0.001) off is 85.7% identical
+  and 20 levels out (39 at 1280 × 720), Lamp 1 X one step 93.9% and 50, Lamp 2 Size one
+  step 98.3% and 3, Opacity one step 89.5% and 4, Room Light ten steps 94.2% and 1 (a single
+  Room Light step moves no pixel more than a level, inside the tolerance, so that control is
+  ten). Other GPUs and browsers are not compared.
+- Headless Chrome against `demo/` served locally: the defaults on white (yellow left, cyan
+  right, magenta below, red and blue where two overlap), no console error; Distance moved
+  through its slider and Lamp 1 X through the params each change the picture; the swaying
+  figure moves on its own; Nobody on a clip returns the clip.
+- The page head's `og:image` (`https://stoatworks-labs.com/thumbs/penumbra.png`) and
+  `project-page` (`https://stoatworks-labs.com/software/penumbra/`) returned 404 on
+  2026-11-18: the website does not have penumbra yet. Both resolve once it does.
+
 ## Open questions
 
 - **Depth, in v0.2**: `Distance From: Control / Occluder Red`, opt-in, once the hub defines

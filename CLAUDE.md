@@ -111,10 +111,23 @@ departs from it.
   verbatim.
 - The fleet checkout is `~/Projects/resolume/penumbra`; work on it in a worktree.
 
+## Browser demo
+- `demo/` is <https://penumbra-demo.stoatworks-labs.com>; `.github/workflows/deploy.yml`
+  deploys it on a push to main (a route plus a proxied AAAA 100:: record, not a custom
+  domain: `wrangler.toml`).
+- After a shader edit: `python3 demo/tools/check_shaders.py --write` (verify.sh fails on
+  drift). It also fails if a C++ line the page's pass orchestration was ported from changes
+  (Penumbra.cpp's table passes, TableBuffer.cpp, kRadix): change the port, then the anchor.
+- After a change to Controls, Model or ProcessOpenGL: change the port in `demo/plugin.js`
+  (between the PORT and FRAME markers) too.
+- Locally: `python3 -m http.server -d demo`, or `npx wrangler dev` for the real `_headers`.
+- Against the plugin: `python3 demo/tools/crosscheck/crosscheck.py` (needs
+  `build-verify/putest`, Chrome and a GPU). AGENTS.md has the gaps and the last figures.
+
 ## Not done yet
 - Never loaded in Resolume (either platform); never built on Windows; the hub's mask has
   never been fed to it.
-- No user guide, no OpenFX port, no browser demo, no presets.
+- No user guide, no OpenFX port, no presets.
 
 ## Diagnostics
 

@@ -201,6 +201,19 @@ the red lamp's shadow is visible.
 - **Room Light is a uniform floor**: the person doesn't block it.
 - **Other GPUs.** Run on one Apple GPU and Apple's software renderer only.
 
+## Browser demo
+
+**<https://penumbra-demo.stoatworks-labs.com/>** is SW Penumbra in a web page: every control
+with its own name, group and default; a white screen, one of the kit's generated clips or a
+picture of yours (decoded in the page, never uploaded) as the screen; and putest's stick
+figure, still or gently swaying, as the person. The shaders are the plugin's own GLSL,
+spliced unedited (`demo/tools/check_shaders.py`, run by `tools/verify.sh`). What runs them
+(the R32UI tables and radix-16 prefix passes, the lamps' shares and boxes, every conversion)
+is a JavaScript port, and `demo/tools/crosscheck/` renders it and `putest` from the same
+frames: in 17 cases at 640 × 360 and 1280 × 720, every pixel is the plugin's. It is a demo,
+not the plugin, and says what it leaves out: the person is a generated figure, not a keyed
+performer, and the page has never been compared on another GPU.
+
 ## Build
 
 macOS (universal: Apple Silicon and Intel), from a checkout with its submodule
