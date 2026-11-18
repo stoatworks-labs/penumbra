@@ -2,7 +2,8 @@
 
 Why the code is the way it is. `CLAUDE.md` is the command reference; the design is
 `~/Projects/resolume/specs/SPEC-penumbra.md`, whose "As built" section lists where this repo
-departs from it. Built 2026-11-16 from the spec, in one session, local only.
+departs from it. Built 2026-11-16 from the spec, in one session, local only; public at
+`stoatworks-labs/penumbra` since 2026-11-18.
 
 ## The idea
 

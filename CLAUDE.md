@@ -102,11 +102,14 @@ departs from it.
 - **Provisional hand copies:** `source/StoatworksAbout*.h` (guide = "", no user guide yet)
   and `ATTRIBUTIONS.md`. Once the project is registered in stoatworks-backend,
   `sync-about.py` and `sync-attributions.py` generate them; edit them there then.
-- **The workflows are files only.** `.github/workflows/ci.yml` and `release.yml` were
-  adapted from haze and have never run. There's no remote. If the repo goes to GitHub as a
-  private repo, they must not be enabled (the fleet's Actions quota); build and release
-  locally.
-- Local only: `~/dev/penumbra`, no remote, nothing released, not on the website.
+- **The workflows.** The repo is public (`stoatworks-labs/penumbra`, since 2026-11-18),
+  which is what allows Actions. `ci.yml` builds on macOS and Windows on every push and pull
+  request; `release.yml` (xenon's shape, with pepper's `tools/wincheck.ps1`) builds the
+  universal bundle and the Windows DLL, loads the DLL as a host would, and on a `v*` tag
+  publishes the zips, the dmg and the installer. A `workflow_dispatch` run builds without
+  publishing. `scripts/release-lib.sh` is stoatworks-backend's `release/release-lib.sh`,
+  verbatim.
+- The fleet checkout is `~/Projects/resolume/penumbra`; work on it in a worktree.
 
 ## Not done yet
 - Never loaded in Resolume (either platform); never built on Windows; the hub's mask has

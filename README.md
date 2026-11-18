@@ -204,7 +204,8 @@ the red lamp's shadow is visible.
 ## Build
 
 macOS (universal: Apple Silicon and Intel), from a checkout with its submodule
-(`git submodule update --init --recursive`; the repository is local, with no remote yet):
+(`git clone --recursive https://github.com/stoatworks-labs/penumbra`, or
+`git submodule update --init --recursive` in an existing clone):
 
 ```bash
 cmake -B build -DCMAKE_BUILD_TYPE=Release

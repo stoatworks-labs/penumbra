@@ -2,9 +2,8 @@ name: ci
 
 # A `pull_request` trigger from the first commit, so a Dependabot bump has a
 # status check to gate its merge on (ferrofluid ran without one for months).
-# Written, never run: the repo has no remote yet. Enable it only if the repo is
-# public (the machine's rule: Actions minutes on private repos are shared and
-# scarce).
+# The repo is public (stoatworks-labs/penumbra), which is what allows Actions
+# here: minutes on private repos are shared and scarce.
 #
 # macOS and Windows. The CMakeLists branches on APPLE and WIN32 and has no
 # Linux path at all, so ubuntu is not an option. The Windows job is pitch's,
@@ -17,7 +16,8 @@ name: ci
 # other check is a picture. The shaders are covered the other way, by glslc.
 # The pixel checks run in tools/verify.sh, on a Mac with a GPU and again on
 # Apple's software renderer at both rasters -- what this runner would fall
-# back to. Adapted from haze's; written, never run.
+# back to. Adapted from haze's; the runner moved to macos-15 with xenon's, as
+# GitHub no longer starts macos-14 jobs.
 on:
   push:
     branches: [main]
@@ -27,7 +27,7 @@ on:
 jobs:
   macos:
     name: macOS
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
