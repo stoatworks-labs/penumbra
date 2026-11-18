@@ -75,6 +75,10 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 <!-- downloads:end -->
 
+## Video
+
+[![Penumbra: coloured shadows for Resolume, from three lamps](docs/video-thumb.png)](https://www.youtube.com/watch?v=9OlUl-H90OA)
+
 ## The one idea
 
 **Each point of the screen shows the sum of the lamps it can see.**
